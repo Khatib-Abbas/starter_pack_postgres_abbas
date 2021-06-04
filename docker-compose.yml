@@ -1,0 +1,44 @@
+version: "3.4"
+
+services:
+  php:
+    build:
+      context: ./api
+      target: api_platform_php
+    restart: unless-stopped
+    depends_on:
+      - database
+    healthcheck:
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+  web:
+    build:
+      context: ./api
+      target: api_platform_web
+    restart: unless-stopped
+    depends_on:
+      - php
+    ports:
+      # HTTP
+      - target: 80
+        published: 1881
+        protocol: tcp
+    environment:
+      PHP_HOST: php
+      PHP_PORT: 9000
+
+  database:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_DB=api
+      - POSTGRES_PASSWORD=!ChangeMe!
+      - POSTGRES_USER=api-platform
+    volumes:
+      # - ./api/docker/db/data:/var/lib/postgresql/data:rw
+      - db_data:/var/lib/postgresql/data:rw
+      # SI DB NON PERSISTENTE
+
+volumes:
+  db_data: ## SI DB NON PERSISTENTE
